@@ -1,0 +1,19 @@
+{
+	"name": "my-bot",
+	"version": "1.0.0",
+	"description": "Test Discord bot.",
+	"main": "discord.js",
+	"scripts": {
+		"test": "node test.js",
+		"start": "node .",
+		"lint": "eslint ."
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"discord.js": "^13.3.1",
+		"dotenv": "^10.0.0",
+		"node": "^16.13.0"
+	}
+}

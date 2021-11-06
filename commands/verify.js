@@ -7,32 +7,40 @@ module.exports = {
 
 			//Create and send embed
 
-			console.log(args);
-			//Regex and verify valid  args
 			const email = args.shift();
 			var name = '';
 			args.forEach((word) => {
 				name += word + ' ';
 			});
-			var proceed = false;
 
-			if (!proceed) {
-				message.author.send(
-					'No Arguments provided. Please try the !verify command again followed by your name and email.'
-				);
-			} else {
-				message.author.send('Arguments provided.');
+			console.log(email + ' ' + name);
 
-				message.author.send('Name: ' + name);
-				message.author.send('Email: ' + email);
-				message.author
-					.send(
-						'Please confirm that the information you entered is correct by reacting to this message.'
+			let regexEmail = /^([aA-zZ]+[0-9]*)(\@live.esu.edu)$/;
+			let regexname = /^([A-Z][a-z]+)\s([A-Z]\s)?([A-Z])([a-z]+)?\s$/;
+			var validemail = regexEmail.test(email);
+			var validname = regexname.test(name);
+
+			console.log(validemail + '' + validname);
+
+			if (validemail && validname) {
+				const confirmEmbed = new Discord.MessageEmbed()
+					.setColor('#304281')
+					.setTitle('Confirmation')
+					.setDescription(
+						'Please confirm if the information enterned is correct.'
 					)
-					.then((m) => {
-						m.react('✅');
-						m.react('❌');
-					});
+					.addFields(
+						{ name: 'Name:', value: '' + name },
+						{ name: 'Email:', value: '' + email }
+					)
+					.setFooter('Message will expire after 45 seconds.');
+
+				message.author.send({ embeds: [confirmEmbed] }).then((embedMessage) => {
+					embedMessage.react('✅').then(() => embedMessage.react('❌'));
+				});
+
+			} else {
+				message.author.send('Please try the !verify command again.');
 				/**
 				 * Wait 30 seconds till react, else timeout if time exceeded
 				 * else if reponded to react, generate 6-digit code and set server nickname to name

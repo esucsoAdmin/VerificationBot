@@ -36,7 +36,12 @@ module.exports = (Discord, client, member) => {
 			{
 				name: 'Step 1:',
 				value:
-					'Begin the verification process with !verify command followed by your real first and last name, and email - all seperated by spaces.',
+					'Begin the verification process with !verify command followed by your email, and real name - seperated by spaces.',
+			},
+			{
+				name: 'Examples:',
+				value:
+					'!verify jsmith@live.esu.edu John Smith\n!verify jsmith@live.esu.edu John S\n!verify jsmith@live.esu.edu John A Smith',
 			},
 			{
 				name: 'Step 2:',

@@ -4,8 +4,10 @@ module.exports = {
 	execute(client, message, args, Discord) {
 		if (message.channel.type === 'DM' && !message.author.bot) {
 			console.log('Verify - DM Recived');
-			console.log(args);
 
+			//Create and send embed
+
+			console.log(args);
 			//Regex and verify valid  args
 			const email = args.shift();
 			var name = '';
@@ -33,7 +35,8 @@ module.exports = {
 					});
 				/**
 				 * Wait 30 seconds till react, else timeout if time exceeded
-				 * Else, generate 6-digit code
+				 * else if reponded to react, generate 6-digit code and set server nickname to name
+				 * call email_verification
 				 *
 				 * function email_verification(name, email, memberid, joindate, code)
 				 * Store code, member id, member join date in Database

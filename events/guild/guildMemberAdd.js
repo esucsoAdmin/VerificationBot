@@ -36,7 +36,7 @@ module.exports = (Discord, client, member) => {
 			{
 				name: 'Step 1:',
 				value:
-					'Begin the verification process with !verify command followed by your email, and real name - seperated by spaces.',
+					'Begin the verification process with !verify command followed by your email, and first and last name (feel free to include middle initial) - seperated by spaces.',
 			},
 			{
 				name: 'Examples:',
@@ -45,9 +45,18 @@ module.exports = (Discord, client, member) => {
 			},
 			{
 				name: 'Step 2:',
-				value: 'You will be sent a verification code to the provided email.',
+				value:
+					'You will be asked to confirm if the information entered is correct. You must react within 45 seconds or you must start the verification process again.',
 			},
-			{ name: 'Step 3:', value: 'Reply with the code.' }
+			{
+				name: 'Step 3:',
+				value:
+					'After confirmation, you will be sent a verification code to the provided email.',
+			},
+			{
+				name: 'Step 3:',
+				value: 'Reply to the bot, with the code, within 24 hours.',
+			}
 		)
 		.setFooter(
 			'If you have any questions, please use the !help command, or ask an Admin for help.'

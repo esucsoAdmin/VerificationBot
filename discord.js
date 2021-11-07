@@ -9,12 +9,14 @@ const intents = [
 	'GUILDS',
 	'GUILD_MEMBERS',
 	'GUILD_MESSAGES',
+	'GUILD_MESSAGE_REACTIONS',
 	'DIRECT_MESSAGES',
+	'DIRECT_MESSAGE_REACTIONS',
 ];
 const client = new Discord.Client({
 	intents: intents,
 	ws: { intents: intents },
-	partials: ['CHANNEL'],
+	partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
 });
 
 //Require Handlers

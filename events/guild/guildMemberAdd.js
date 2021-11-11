@@ -1,11 +1,11 @@
 const message = require('./message');
 
 module.exports = (Discord, client, member) => {
-	var channel = client.channels.cache.get('906056492766097421'); //Channel id for verification
+	var channel = client.channels.cache.get('907413136989114395'); //Channel id for verification
 
 	if (!channel) return;
 
-	member.roles.add('906081086226972675'); //Role id for unverified
+	member.roles.add('907413136959746064'); //Role id for unverified
 
 	//Create and send embed
 	const welcomeEmbed = new Discord.MessageEmbed()

@@ -1,9 +1,6 @@
-//https://discord.com/oauth2/authorize?client_id=906043468290338836&scope=bot&permissions=8589934591
-//const { channel } = require('diagnostics_channel');
 const Discord = require('discord.js');
-
 require('dotenv').config();
-const token = `${process.env.API_TOKEN}`;
+const mongoose = require('mongoose');
 
 const intents = [
 	'GUILDS',
@@ -27,4 +24,15 @@ client.commands = new Discord.Collection();
 	require(`./handlers/${handler}`)(client, Discord);
 });
 
-client.login(token);
+mongoose
+	.connect(`${process.env.MONGODB_SRV}`, {
+		useUnifiedTopology: true,
+	})
+	.then(() => {
+		console.log('Connected to database!');
+	})
+	.catch((error) => {
+		console.log(error);
+	});
+
+client.login(`${process.env.API_TOKEN}`);

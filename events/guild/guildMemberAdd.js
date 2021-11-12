@@ -5,7 +5,10 @@ module.exports = (Discord, client, member) => {
 
 	if (!channel) return;
 
-	member.roles.add('907413136959746064'); //Role id for unverified
+	var role = member.guild.roles.cache.find(
+		(role) => role.name === 'Unverified'
+	);
+	member.roles.add(role);
 
 	//Create and send embed
 	const welcomeEmbed = new Discord.MessageEmbed()

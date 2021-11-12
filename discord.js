@@ -25,7 +25,7 @@ client.commands = new Discord.Collection();
 });
 
 mongoose
-	.connect(`${process.env.MONGODB_SRV}`, {
+	.connect(process.env.MONGODB_SRV, {
 		useUnifiedTopology: true,
 	})
 	.then(() => {
@@ -35,4 +35,4 @@ mongoose
 		console.log(error);
 	});
 
-client.login(`${process.env.API_TOKEN}`);
+client.login(process.env.API_TOKEN);

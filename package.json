@@ -1,22 +1,30 @@
 {
-	"name": "my-bot",
+	"name": "CSOfficer",
 	"version": "1.0.0",
-	"description": "Test Discord bot.",
+	"description": "Discord Verification bot.",
+	"author": "ESU Computer Science Organization",
+	"license": "ISC",
 	"main": "discord.js",
 	"scripts": {
 		"test": "node test.js",
 		"start": "node .",
-		"lint": "eslint ."
+		"dev": "npm run server",
+		"server": "nodemon discord.js"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
 	"dependencies": {
+		"node": "^16.13.0",
 		"discord.js": "^13.3.1",
 		"dotenv": "^10.0.0",
-		"fs": "^0.0.1-security",
+		"file-system": "^1.2.2",
 		"mongoose": "^6.0.12",
-		"node": "^16.13.0",
 		"nodemailer": "^6.7.0"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.15"
+	},
+	"homepage": "https://esucso.org/",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/esucsoAdmin/VerificationBot.git"
 	}
 }

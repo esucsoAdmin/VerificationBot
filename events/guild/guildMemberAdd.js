@@ -1,6 +1,6 @@
-const message = require('./message');
+var database = require('../../misc/database');
 
-module.exports = (Discord, client, member) => {
+module.exports = async (Discord, client, member) => {
 	var channel = client.channels.cache.get('907413136989114395'); //Channel id for verification
 
 	if (!channel) return;
@@ -9,6 +9,8 @@ module.exports = (Discord, client, member) => {
 		(role) => role.name === 'Unverified'
 	);
 	member.roles.add(role);
+
+	database.createEntry(member); //add user to DB
 
 	//Create and send embed
 	const welcomeEmbed = new Discord.MessageEmbed()
@@ -28,7 +30,7 @@ module.exports = (Discord, client, member) => {
 			'If you have any questions, please use the !help command, or ask an Admin for help.'
 		);
 
-	channel.send('Welcome to our server <@' + member.user.id + '>!.');
+	channel.send(`Welcome to our server ${member}!`);
 	channel.send({ embeds: [welcomeEmbed] });
 
 	const verifyEmbed = new Discord.MessageEmbed()

@@ -10,7 +10,7 @@ module.exports = async (Discord, client, member) => {
 	);
 	member.roles.add(role);
 
-	database.createEntry(member); //add user to DB
+	database.createEntry(member.id, member.guild.id); //add user to DB
 
 	//Create and send embed
 	const welcomeEmbed = new Discord.MessageEmbed()

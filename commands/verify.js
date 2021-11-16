@@ -1,116 +1,126 @@
 const nodemailer = require('../misc/mailer');
+const database = require('../misc/database');
+
+//functions to validate user input matching regex
+const validemail = (str) => {
+	let regex = /^([aA-zZ]+[0-9]*)(\@live.esu.edu)$/; //https://regex101.com/r/DeO5gF/1
+	if (regex.test(str)) return true;
+	else return false;
+};
+
+const validname = (str) => {
+	let regex =
+		/^([A-Z][a-z]+)\s?(([A-Z]|([A-Z][a-z]+))\s)?([A-Z]|([A-Z][a-z]+))?$/; //https://regex101.com/r/GIctIr/1
+	if (regex.test(str)) return true;
+	else return false;
+};
 
 module.exports = {
-	name: 'verify', //verify-member //verify-friend //verify
+	name: 'verify',
 	description: 'Verify command',
 	async execute(client, message, args, Discord) {
-		//Only unferified role can use this command, add command timeout (after 3 tries??) to avoid email spam
-		//cannot use command if in database awaiting verification
 		if (message.channel.type === 'DM' && !message.author.bot) {
 			console.log('Verify Command - DM Recived');
 
-			console.log(args);
+			/****No arguments given.****/
+			if (!args.length) {
+				message.reply('No arguments given.');
+				return;
+			}
 
-			//get User input
+			/****User tries to verify again.****/
+			if (await database.hasVerifyCode(message.author.id)) {
+				message.reply(
+					'A verification code has already been generated and sent to your email address.'
+				);
+				return;
+			}
+
+			/****Match User object with guildMember object using info in DB****/
+			let profileData = await database.getProfileData(message.author.id);
+			const guild = await client.guilds.cache.get(profileData.serverID);
+			let member = await guild.members.fetch(profileData.userID);
+
+			//get user input
+			console.log(args);
 			var email = args.shift();
 			var name = args.toString().replace(',', ' ');
-
 			console.log('Email: ' + email + ' Name: ' + name);
 
-			let regexEmail = /^([aA-zZ]+[0-9]*)(\@live.esu.edu)$/; //https://regex101.com/r/DeO5gF/1
-			let regexname =
-				/^([A-Z][a-z]+)\s?(([A-Z]|([A-Z][a-z]+))\s)?([A-Z]|([A-Z][a-z]+))?$/; //https://regex101.com/r/GIctIr/1
-			var validemail = regexEmail.test(email);
-			var validname = regexname.test(name);
+			console.log(
+				'Valid email: ' + validemail(email) + ' Valid name:' + validname(name)
+			);
 
-			console.log(validemail + ' ' + validname);
+			//validate user input
+			switch (validemail(email) + ' ' + validname(name)) {
+				case 'false false':
+					message.reply(
+						'Invalid email and name. Please try the !verify command again.'
+					);
+					return;
+				case 'false true':
+					message.reply('Invalid email. Please try the !verify command again.');
+					return;
 
-			if (validemail && validname) {
-				const confirmEmbed = new Discord.MessageEmbed()
-					.setColor('#304281')
-					.setTitle('Confirmation')
-					.setDescription(
-						'Please confirm if the information enterned is correct.'
-					)
-					.addFields(
-						{ name: 'Name:', value: '' + name },
-						{ name: 'Email:', value: '' + email }
-					)
-					.setFooter('Message will expire after 30 seconds.');
+				case 'true false':
+					message.reply(
+						'Invalid name format. Please try the !verify command again.'
+					);
+					return;
 
-				let embed = await message.reply({ embeds: [confirmEmbed] });
+				default:
+					//Proceed if correct arguments are given
+					const confirmEmbed = new Discord.MessageEmbed()
+						.setColor('#304281')
+						.setTitle('Confirmation')
+						.setDescription(
+							'Please confirm if the information enterned is correct.'
+						)
+						.addFields(
+							{ name: 'Name:', value: '' + name },
+							{ name: 'Email:', value: '' + email }
+						)
+						.setFooter('Message will expire after 30 seconds.');
 
-				await embed.react('✅');
-				await embed.react('❌');
+					let embed = await message.reply({ embeds: [confirmEmbed] });
 
-				const filter = (reaction, user) => {
-					return ['✅', '❌'].includes(reaction.emoji.name) && !user.bot;
-				};
+					await embed.react('✅');
+					await embed.react('❌');
 
-				embed
-					.awaitReactions({ filter, max: 1, time: 30000, errors: ['time'] })
-					.then((collected) => {
-						const reaction = collected.first();
+					const filter = (reaction, user) => {
+						return ['✅', '❌'].includes(reaction.emoji.name) && !user.bot;
+					};
 
-						if (reaction.emoji.name === '✅') {
-							var code = Math.floor(100000 + Math.random() * 900000);
-							//confirm email was actually sent through mailer
-							var mailer = new nodemailer(email);
-							var sent = mailer.send(
-								'Hello ' + name + ', your verification code is: ' + code
-							);
-							console.log(sent);
-							///set Nickname
-							//store in DB (user.id, code, and date (Could be done in DB))
+					embed
+						.awaitReactions({ filter, max: 1, time: 30000, errors: ['time'] })
+						.then((collected) => {
+							const reaction = collected.first();
+
+							if (reaction.emoji.name === '✅') {
+								var code = Math.floor(100000 + Math.random() * 900000);
+								//confirm email was actually sent through mailer
+								var mailer = new nodemailer(email); //change mailer class
+								mailer.send(
+									'Hello ' + name + ', your verification code is: ' + code
+								);
+								//set Nickname
+								//store in DB (code, email, date)
+								database.addVerifyCode(member.user.id, code);
+								message.reply(
+									'Verification email sent! Please check your inbox.'
+								);
+							} else {
+								message.reply('Use the !verify command again.');
+							}
 							embed.delete();
+						})
+						.catch((collected) => {
 							message.reply(
-								'Verification Email Sent! Please check your inbox.'
+								'Message expired. Please use the !verify command again.'
 							);
-						} else {
 							embed.delete();
-							message.reply('Use the !verify command again.');
-							//this.execute(client, message, args, Discord);
-						}
-					})
-					.catch((collected) => {
-						embed.delete();
-						message.reply('Message expired.');
-					});
-			} else if (!validemail) {
-				message.reply('Invalid email. Please try the !verify command again.');
-			} else if (!validname) {
-				message.reply(
-					'Invalid name format. Please try the !verify command again.'
-				);
+						});
 			}
-		} else message.reply('That command cannot be used here.');
+		} else message.reply('For privacy, that command cannot be used here.');
 	},
 };
-
-/**
- * Wait 30 seconds till react, else timeout if time exceeded
- * else if reponded to react, generate 6-digit code and set server nickname to name
- * call email_verification
- *
- * function email_verification(name, email, memberid, joindate, code)
- * Store code, member id, member join date in Database
- * Match responded code (must reply with 24 hours of code being sent (use member join date))
- * with code in database using message.member.id and memberID in DB
- * compare join date with message's date
- * also check if their already in DB, so they cannot use cammand again send msg("Verification code alredy sent")
- * if join date is > message's date (delete member from DB(done automatically in DB))
- *|| member does not exist in DB (b/c auto deleted), must !verify again
- * else if code sent == code in DB && join date < message's date
- * member.role == verified
- *
- * AFTER VERIFITION COMPLETED:
- *
- * Are you a comp sci major? verfity-student => must have valid esu email		|=> could be alias
- * Are you and alumni? verify-alumni => must have valid esu email 				|=> could be alias
- * Do you go to ESU? verify-peer => must have valid esu email					|=> could be alias
- *
- * Are you a freind? verify-freind => must tag freind (check if in server) => send dm to friend, must accept => (board member approval???)
- *
- *
- * Move prefix in .env
- **/

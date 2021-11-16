@@ -8,7 +8,7 @@ module.exports.createEntry = async (id, guildID) => {
 			userID: id,
 		});
 		profileData.save();
-		console.log(`${member.username} added to database...`);
+		console.log('User added to database...');
 	} catch (error) {
 		console.log(error);
 	}
@@ -21,13 +21,14 @@ module.exports.deleteEntry = async (id, guildID) => {
 			serverID: guildID,
 			meberID: id,
 		});
+		console.log('User removed from database...');
 	} catch (error) {
 		console.log(error);
 	}
 };
 
 /****Returns true if the user has already generated a code else returns false****/
-module.exports.checkEntry = async (id) => {
+module.exports.hasVerifyCode = async (id) => {
 	try {
 		profileData = await verifyModel.findOne({
 			userID: id,
@@ -45,7 +46,7 @@ module.exports.checkEntry = async (id) => {
 };
 
 /****Updates verification code in database****/
-module.exports.updateEntry = async (id, code) => {
+module.exports.addVerifyCode = async (id, code) => {
 	try {
 		profileData = await verifyModel.findOneAndUpdate(
 			{
@@ -61,7 +62,7 @@ module.exports.updateEntry = async (id, code) => {
 };
 
 /****Returns true if user enterned code matches database entry****/
-module.exports.matchEntry = async (id, code) => {};
+module.exports.matchCode = async (id, code) => {};
 
 /****Returns profileData for user matching given id in database****/
 module.exports.getProfileData = async (id) => {

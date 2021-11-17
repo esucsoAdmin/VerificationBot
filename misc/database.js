@@ -1,7 +1,7 @@
 const verifyModel = require('../models/verifySchema');
 
 /****Create member in Database****/
-module.exports.createEntry = async (memberID, guildID) => {
+module.exports.createEntry = async (guildID, memberID) => {
 	try {
 		profileData = await verifyModel.create({
 			serverID: guildID,
@@ -15,11 +15,11 @@ module.exports.createEntry = async (memberID, guildID) => {
 };
 
 /****Delete member in Database****/
-module.exports.deleteEntry = async (memberid, guildID) => {
+module.exports.deleteEntry = async (guildID, memberID) => {
 	try {
 		await verifyModel.deleteOne({
 			serverID: guildID,
-			userID: memberid,
+			userID: memberID,
 		});
 		console.log('User removed from database...');
 	} catch (error) {

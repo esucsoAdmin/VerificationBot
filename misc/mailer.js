@@ -1,32 +1,33 @@
 const nodemailer = require('nodemailer');
 
-module.exports = function (email) {
-	this.email = email;
-	this.send = function (message) {
-		console.log('Sending email to...' + email);
-		let transporter = nodemailer.createTransport({
-			service: 'outlook',
-			auth: {
-				user: `${process.env.BOT_EMAIL}`,
-				pass: `${process.env.EMAIL_PASS}`,
-			},
-		});
+let transporter = nodemailer.createTransport({
+	service: 'outlook',
+	auth: {
+		user: process.env.BOT_EMAIL,
+		pass: process.env.EMAIL_PASS,
+	},
+});
 
-		let mailOptions = {
-			from: `${process.env.ADMIN_EMAIL}`,
-			to: email,
-			subject: 'Verification Code',
-			text: message,
-		};
+/****Sends email with verification code to given email address returns Promise Object****/
+module.exports.sendVerifyEmail = (email, name, code) => {
+	console.log('Sending email to...' + email);
 
-		transporter.sendMail(mailOptions, function (err, data) {
-			if (err) {
-				console.log('Error Occured: ' + err);
-				return false;
+	let mailOptions = {
+		from: process.env.BOT_EMAIL,
+		to: email,
+		subject: 'Verification Code',
+		text: `Hello ${name}, your verification code is: ${code}.`,
+	};
+
+	return new Promise(function (resolve, reject) {
+		transporter.sendMail(mailOptions, function (error, data) {
+			if (error) {
+				reject(false);
+				console.log('Error Occured: ' + error);
 			} else {
+				resolve(true);
 				console.log('Email Sent!');
-				return true;
 			}
 		});
-	};
+	});
 };

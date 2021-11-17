@@ -1,4 +1,4 @@
-const nodemailer = require('../misc/mailer');
+const mailer = require('../misc/mailer');
 const database = require('../misc/database');
 
 //functions to validate user input matching regex
@@ -15,12 +15,22 @@ const validname = (str) => {
 	else return false;
 };
 
+const validCode = (str) => {
+	let regex = /^[0-9]{6}$/; //https://regex101.com/r/TXzALb/1
+	if (regex.test(str)) return true;
+	else return false;
+};
+
+var code = Math.floor(100000 + Math.random() * 900000);
+
 module.exports = {
 	name: 'verify',
 	description: 'Verify command',
 	async execute(client, message, args, Discord) {
 		if (message.channel.type === 'DM' && !message.author.bot) {
 			console.log('Verify Command - DM Recived');
+			//Cannot use if (role == 'Verified')
+			//message.reply('You are already verified.');
 
 			/****No arguments given.****/
 			if (!args.length) {
@@ -28,18 +38,18 @@ module.exports = {
 				return;
 			}
 
+			/****Match User object with guildMember object using info in DB****/
+			let profileData = await database.getProfileData(message.author.id);
+			const guild = await client.guilds.cache.get(profileData.serverID);
+			const member = await guild.members.fetch(profileData.userID);
+
 			/****User tries to verify again.****/
-			if (await database.hasVerifyCode(message.author.id)) {
+			if (await database.hasVerifyCode(member.id)) {
 				message.reply(
 					'A verification code has already been generated and sent to your email address.'
 				);
 				return;
 			}
-
-			/****Match User object with guildMember object using info in DB****/
-			let profileData = await database.getProfileData(message.author.id);
-			const guild = await client.guilds.cache.get(profileData.serverID);
-			let member = await guild.members.fetch(profileData.userID);
 
 			//get user input
 			console.log(args);
@@ -95,20 +105,22 @@ module.exports = {
 						.awaitReactions({ filter, max: 1, time: 30000, errors: ['time'] })
 						.then((collected) => {
 							const reaction = collected.first();
-
 							if (reaction.emoji.name === '✅') {
-								var code = Math.floor(100000 + Math.random() * 900000);
 								//confirm email was actually sent through mailer
-								var mailer = new nodemailer(email); //change mailer class
-								mailer.send(
-									'Hello ' + name + ', your verification code is: ' + code
-								);
-								//set Nickname
-								//store in DB (code, email, date)
-								database.addVerifyCode(member.user.id, code);
-								message.reply(
-									'Verification email sent! Please check your inbox.'
-								);
+								mailer
+									.sendVerifyEmail(email, name, code)
+									.then(function (status) {
+										console.log('Email sent: ' + status);
+										message.reply(
+											'Verification email sent! Please check your inbox.'
+										);
+										database.addVerifyCode(member.user.id, code); //store generated code //also store in DB (verification date, joindate)
+										member.setNickname(name); // set nickname
+									})
+									.catch(function (status) {
+										console.log('Email sent: ' + status);
+										message.reply('There was an error sending the email.');
+									});
 							} else {
 								message.reply('Use the !verify command again.');
 							}

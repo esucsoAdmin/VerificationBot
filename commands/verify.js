@@ -2,13 +2,13 @@ const mailer = require('../misc/mailer');
 const database = require('../misc/database');
 
 //functions to validate user input matching regex
-const validemail = (str) => {
+const validEmail = (str) => {
 	let regex = /^([aA-zZ]+[0-9]*)(\@live.esu.edu)$/; //https://regex101.com/r/DeO5gF/1
 	if (regex.test(str)) return true;
 	else return false;
 };
 
-const validname = (str) => {
+const validName = (str) => {
 	let regex =
 		/^([A-Z][a-z]+)\s?(([A-Z]|([A-Z][a-z]+))\s)?([A-Z]|([A-Z][a-z]+))?$/; //https://regex101.com/r/GIctIr/1
 	if (regex.test(str)) return true;
@@ -81,11 +81,11 @@ module.exports = {
 			console.log('Email: ' + email + ' Name: ' + name);
 
 			console.log(
-				'Valid email: ' + validemail(email) + ' Valid name:' + validname(name)
+				'Valid email: ' + validEmail(email) + ' Valid name:' + validName(name)
 			);
 
 			//validate user input
-			switch (validemail(email) + ' ' + validname(name)) {
+			switch (validEmail(email) + ' ' + validName(name)) {
 				case 'false false':
 					message.reply(
 						'Invalid email and name. Please try the !verify command again.'

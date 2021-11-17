@@ -16,7 +16,7 @@ const validname = (str) => {
 };
 
 const validCode = (str) => {
-	let regex = /^[0-9]{6}$/; //https://regex101.com/r/TXzALb/1
+	let regex = /^[0-9]+$/; //https://regex101.com/r/ecMLTu/1
 	if (regex.test(str)) return true;
 	else return false;
 };
@@ -43,11 +43,34 @@ module.exports = {
 			const guild = await client.guilds.cache.get(profileData.serverID);
 			const member = await guild.members.fetch(profileData.userID);
 
-			/****User tries to verify again.****/
-			if (await database.hasVerifyCode(member.id)) {
+			let hasCode = await database.hasVerifyCode(guild.id, member.id);
+
+			/****User enters code and has code in DB.****/
+			if (validCode(args) && hasCode) {
+				if (await database.matchCode(guild.id, member.id, args)) {
+					message.reply('Valid code!');
+					//change role to verified
+					//ask if member, alumni, peer, or friend (different command)
+					//delete from DB}
+				} else {
+					message.reply(
+						'Sorry, the code you entered does not match my records.'
+					);
+				}
+				return;
+			}
+
+			/****User tries to verify again, but has code in DB.****/
+			if (hasCode) {
 				message.reply(
 					'A verification code has already been generated and sent to your email address.'
 				);
+				return;
+			}
+
+			/****User enters code, but has no code in DB.****/
+			if (validCode(args) && !hasCode) {
+				message.reply('You have not generated a verification code yet.');
 				return;
 			}
 
@@ -106,7 +129,7 @@ module.exports = {
 						.then((collected) => {
 							const reaction = collected.first();
 							if (reaction.emoji.name === '✅') {
-								//confirm email was actually sent through mailer
+								//wait for email to sent, and confirm email was sent
 								mailer
 									.sendVerifyEmail(email, name, code)
 									.then(function (status) {
@@ -114,7 +137,7 @@ module.exports = {
 										message.reply(
 											'Verification email sent! Please check your inbox.'
 										);
-										database.addVerifyCode(member.user.id, code); //store generated code //also store in DB (verification date, joindate)
+										database.addVerifyCode(guild.id, member.user.id, code); //store generated code //also store in DB (verification date, joindate)
 										member.setNickname(name); // set nickname
 									})
 									.catch(function (status) {

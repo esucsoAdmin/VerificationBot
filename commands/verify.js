@@ -21,7 +21,9 @@ const validCode = (str) => {
 	else return false;
 };
 
-var code = Math.floor(100000 + Math.random() * 900000);
+const generateCode = () => {
+	return Math.floor(100000 + Math.random() * 900000);
+};
 
 module.exports = {
 	name: 'verify',
@@ -29,8 +31,25 @@ module.exports = {
 	async execute(client, message, args, Discord) {
 		if (message.channel.type === 'DM' && !message.author.bot) {
 			console.log('Verify Command - DM Recived');
-			//Cannot use if (role == 'Verified')
-			//message.reply('You are already verified.');
+			/****Match User object with guildMember object using info in DB****/
+			let profileData = await database.getProfileData(message.author.id);
+			if (profileData) {
+				const guild = await client.guilds.cache.get(profileData.serverID);
+				const member = await guild.members.fetch(profileData.userID);
+
+				var hasCode = await database.hasVerifyCode(guild.id, member.id);
+
+				var unverifiedRole = member.guild.roles.cache.find(
+					(role) => role.name === 'Unverified'
+				);
+
+				var verifiedRole = member.guild.roles.cache.find(
+					(role) => role.name === 'Verified'
+				);
+			} else {
+				message.reply('You are already verified.');
+				return;
+			}
 
 			/****No arguments given.****/
 			if (!args.length) {
@@ -38,20 +57,20 @@ module.exports = {
 				return;
 			}
 
-			/****Match User object with guildMember object using info in DB****/
-			let profileData = await database.getProfileData(message.author.id);
-			const guild = await client.guilds.cache.get(profileData.serverID);
-			const member = await guild.members.fetch(profileData.userID);
-
-			let hasCode = await database.hasVerifyCode(guild.id, member.id);
+			// /****User is already verified****/ Dosent work b/c member is not in DB
+			// if (member.roles.cache.some((role) => role === verifiedRole)) {
+			// 	message.reply('You are already verified.');
+			// 	return;
+			// }
 
 			/****User enters code and has code in DB.****/
 			if (validCode(args) && hasCode) {
 				if (await database.matchCode(guild.id, member.id, args)) {
 					message.reply('Valid code!');
-					//change role to verified
+					member.roles.remove(unverifiedRole); //remove unverified role
+					member.roles.add(verifiedRole); //add verified role
+					await database.deleteEntry(guild.id, member.id); //delete from DB
 					//ask if member, alumni, peer, or friend (different command)
-					//delete from DB}
 				} else {
 					message.reply(
 						'Sorry, the code you entered does not match my records.'
@@ -75,14 +94,14 @@ module.exports = {
 			}
 
 			//get user input
-			console.log(args);
-			var email = args.shift();
-			var name = args.toString().replace(',', ' ');
-			console.log('Email: ' + email + ' Name: ' + name);
+			//console.log(args);
+			let email = args.shift();
+			let name = args.toString().replace(',', ' ');
+			//console.log('Email: ' + email + ' Name: ' + name);
 
-			console.log(
-				'Valid email: ' + validEmail(email) + ' Valid name:' + validName(name)
-			);
+			// console.log(
+			// 	'Valid email: ' + validEmail(email) + ' Valid name:' + validName(name)
+			// );
 
 			//validate user input
 			switch (validEmail(email) + ' ' + validName(name)) {
@@ -129,7 +148,8 @@ module.exports = {
 						.then((collected) => {
 							const reaction = collected.first();
 							if (reaction.emoji.name === '✅') {
-								//wait for email to sent, and confirm email was sent
+								const code = generateCode(); //Generate random code
+								//wait for email to send, and confirm email was sent
 								mailer
 									.sendVerifyEmail(email, name, code)
 									.then(function (status) {
@@ -140,7 +160,7 @@ module.exports = {
 										database.addVerifyCode(guild.id, member.user.id, code); //store generated code //also store in DB (verification date, joindate)
 										member.setNickname(name); // set nickname
 									})
-									.catch(function (status) {
+									.catch((status) => {
 										console.log('Email sent: ' + status);
 										message.reply('There was an error sending the email.');
 									});
@@ -156,6 +176,11 @@ module.exports = {
 							embed.delete();
 						});
 			}
-		} else message.reply('For privacy, that command cannot be used here.');
+		} else {
+			message.channel.send(
+				'To keep sensitive info, like your email, private - that command cannot be used here.'
+			);
+			message.delete();
+		}
 	},
 };

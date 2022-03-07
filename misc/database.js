@@ -58,6 +58,7 @@ module.exports.addVerifyCode = async (guildID, memberID, code) => {
 				verifyCode: code,
 			}
 		);
+		console.log('Verify code added...' + code);
 	} catch (error) {
 		console.log(error);
 	}

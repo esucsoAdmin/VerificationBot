@@ -34,8 +34,10 @@ module.exports = {
 			/****Match User object with guildMember object using info in DB****/
 			let profileData = await database.getProfileData(message.author.id);
 			if (profileData) {
-				const guild = await client.guilds.cache.get(profileData.serverID);
-				const member = await guild.members.fetch(profileData.userID);
+				var guild = await client.guilds.cache.get(profileData.serverID);
+				var member = await guild.members.fetch(profileData.userID);
+
+				//const guildID = 907413136594837535
 
 				var hasCode = await database.hasVerifyCode(guild.id, member.id);
 
@@ -157,11 +159,13 @@ module.exports = {
 										message.reply(
 											'Verification email sent! Please check your inbox.'
 										);
-										database.addVerifyCode(guild.id, member.user.id, code); //store generated code //also store in DB (verification date, joindate)
+										//console.log(guild.id + ' ' + member.id);
+										database.addVerifyCode(guild.id, member.id, code); //store generated code //also store in DB (verification date, joindate)
 										member.setNickname(name); // set nickname
 									})
 									.catch((status) => {
-										console.log('Email sent: ' + status);
+										console.log(guild.id + '' + member.id);
+										console.log('Email not sent: ' + status);
 										message.reply('There was an error sending the email.');
 									});
 							} else {
